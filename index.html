@@ -3,893 +3,692 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HVAC Coil Energy Loss Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#5D5CDE',
-                        'primary-dark': '#4A49C7',
-                    }
-                }
+    <title>HVAC Coil Energy Loss Analyser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #FDF7EF;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(31,56,113,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            z-index: -1;
+        }
+
+        .top-header {
+            background: rgba(255, 255, 255, 0.95) url('images/hc-bg.png') center/cover no-repeat;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(31, 56, 113, 0.1);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f3871;
+        }
+
+        .logologo-placeholder {
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(31, 56, 113, 0.1);
+            border: 1px solid rgba(31, 56, 113, 0.1);
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #1f3871, #2d4a8a);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(31, 56, 113, 0.3);
+        }
+
+        .logo svg {
+            width: 45px;
+            height: 45px;
+            fill: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f3871;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(31, 56, 113, 0.1);
+            border: 1px solid rgba(31, 56, 113, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .form-section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f3871;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #1f3871, #2d4a8a);
+            border-radius: 2px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #fefcf8, #fdf9f3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #1f3871;
+            background: linear-gradient(135deg, #fdf9f3, #fcf6ee);
+            transform: translateY(-2px);
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(31, 56, 113, 0.05), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .upload-area:hover::before {
+            opacity: 1;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .upload-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #1f3871, #2d4a8a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #1f3871;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1f3871;
+            box-shadow: 0 0 0 3px rgba(31, 56, 113, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .advanced-section {
+            background: linear-gradient(135deg, #fefcf8, #fdf9f3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid rgba(31, 56, 113, 0.1);
+        }
+
+        .advanced-section h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f3871;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advanced-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #1f3871, #2d4a8a);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .advanced-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1f3871, #2d4a8a);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(31, 56, 113, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(31, 56, 113, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .analysis-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #fdf9f3;
+        }
+
+        .stage {
+            background: linear-gradient(135deg, #fefcf8, #fdf9f3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #1f3871;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #1f3871, #2d4a8a);
+        }
+
+        .stage h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1f3871;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stage-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1f3871, #2d4a8a);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .stage p {
+            color: #666;
+            margin-left: 44px;
+            line-height: 1.6;
+        }
+
+        .error-section {
+            background: linear-gradient(135deg, #fee, #fdd);
+            border: 2px solid #f5c6cb;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .error-section h3 {
+            color: #721c24;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(31, 56, 113, 0.1);
+            border: 1px solid rgba(31, 56, 113, 0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fff8e1, #fff3c4);
+            border: 1px solid #ffc107;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .copyright {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .copyright div {
+            margin-bottom: 5px;
+        }
+
+        .copyright div:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #1f3871;
+        }
+
+        @media (max-width: 768px) {
+            .top-header-content {
+                padding: 0 15px;
+            }
+
+            .brand-name {
+                font-size: 1.2rem;
+            }
+
+            .logo-placeholder {
+                width: 100px;
+                height: 35px;
+                font-size: 0.7rem;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .header {
+                padding: 25px 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 25px 20px;
+            }
+
+            .upload-area {
+                padding: 30px 15px;
+            }
+
+            .btn-primary {
+                width: 100%;
+                padding: 16px;
+            }
+
+            .footer {
+                padding: 25px 20px;
             }
         }
-    </script>
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-primary dark:text-primary mb-4">
-                HVAC Coil Energy Loss Analyzer
-            </h1>
-            <p class="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                Upload photos of your HVAC cooling coil and get detailed analysis of fouling levels and energy efficiency impact. 
-                Our AI agents will estimate dust and biofilm thickness, then calculate the resulting energy penalty.
-            </p>
+<body>
+    <div class="top-header">
+        <div class="top-header-content">
+            <div class="brand-name">HVAC Coil Energy Loss Analyser</div>
+            <div class="logo-placeholder">
+				<img src="images\HiboCare_logo_2 blues.png" alt="HiboCare" width="auto" height="30">
+			</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo"><svg viewBox="0 0 24 24">
+  <!-- Horizontal tubes -->
+  <rect x="2" y="4" width="20" height="2" rx="1" fill="white"/>
+  <rect x="2" y="7" width="20" height="2" rx="1" fill="white"/>
+  <rect x="2" y="10" width="20" height="2" rx="1" fill="white"/>
+  <rect x="2" y="13" width="20" height="2" rx="1" fill="white"/>
+  <rect x="2" y="16" width="20" height="2" rx="1" fill="white"/>
+  
+  <!-- Vertical fins -->
+  <rect x="4" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="6" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="8" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="10" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="12" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="14" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="16" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="18" y="3" width="0.8" height="16" fill="white"/>
+  <rect x="20" y="3" width="0.8" height="16" fill="white"/>
+</svg>
+            </div>
+            <p>Upload photos of your HVAC cooling coil and get detailed analysis of fouling levels and energy efficiency impact. Our AI agents will estimate dust and biofilm thickness, then calculate the resulting energy penalty.</p>
         </div>
 
-        <!-- Input Section -->
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Upload Coil Images & Location</h2>
-            
-            <!-- Image Upload -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium mb-2">
-                    Coil Images (1-3 photos recommended)
-                </label>
-                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-                    <input type="file" id="imageInput" multiple accept="image/*" class="hidden">
-                    <div id="dropZone" class="cursor-pointer">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <div class="main-content">
+            <div class="form-section">
+                <h2>Upload Coil Images & Location</h2>
+                
+                <div class="form-group">
+                    <label>Coil Images (1-3 photos recommended)</label>
+                    <div class="upload-area" onclick="document.getElementById('coilImages').click()">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                            </svg>
+                        </div>
+                        <div class="upload-text">Click to upload or drag and drop coil images</div>
+                        <div class="upload-subtext">Best results: front view, oblique angle, and close-up shots</div>
+                    </div>
+                    <input type="file" id="coilImages" multiple accept="image/*" style="display: none;">
+                </div>
+
+                <div class="form-group">
+                    <label for="cityLocation">City Location</label>
+                    <input type="text" id="cityLocation" class="form-control" placeholder="City helps determine climate factors affecting biofilm formation">
+                </div>
+            </div>
+
+            <div class="advanced-section">
+                <h3>
+                    <div class="advanced-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
                         </svg>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Click to upload or drag and drop coil images
-                        </p>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Best results: front view, oblique angle, and close-up shots
-                        </p>
                     </div>
-                </div>
-                <div id="imagePreview" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
-            </div>
-
-            <!-- City Input -->
-            <div class="mb-6">
-                <label for="cityInput" class="block text-sm font-medium mb-2">
-                    City Location
-                </label>
-                <input 
-                    type="text" 
-                    id="cityInput" 
-                    placeholder="e.g., Houston, TX or London, UK"
-                    class="w-full px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-white dark:bg-gray-700"
-                >
-                <p class="text-sm text-gray-500 mt-1">
-                    City helps determine climate factors affecting biofilm formation
-                </p>
-            </div>
-
-            <!-- Optional Parameters -->
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <button id="optionalToggle" class="text-sm text-primary hover:text-primary-dark flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
                     Optional Parameters (Advanced)
+                </h3>
+                
+                <div class="form-group">
+                    <label for="coilType">Coil Type</label>
+                    <select id="coilType" class="form-control">
+                        <option value="unknown">Unknown</option>
+                        <option value="chw">Chilled Water (CHW)</option>
+                        <option value="dx">Direct Expansion (DX)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filterMerv">Filter MERV Rating</label>
+                    <input type="number" id="filterMerv" class="form-control" placeholder="Enter MERV rating (1-16)">
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn-primary" onclick="analyzeCoil()">
+                    <span class="loading-spinner hidden" id="loadingSpinner"></span>
+                    Analyse Coil Condition
                 </button>
-                <div id="optionalParams" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Coil Type</label>
-                        <select id="coilType" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
-                            <option value="">Unknown</option>
-                            <option value="CHW">Chilled Water (CHW)</option>
-                            <option value="DX">Direct Expansion (DX)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Filter MERV Rating</label>
-                        <input type="number" id="filterMerv" placeholder="8-16" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
-                    </div>
-                </div>
             </div>
 
-            <!-- Analyze Button -->
-            <button 
-                id="analyzeBtn" 
-                class="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Analyze Coil Condition
-            </button>
-        </div>
-
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden">
-            <!-- Stage 1: Image Analysis -->
-            <div id="stage1Results" class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-4">
-                    Stage 1: Image Analysis Results
-                </h3>
-                <div id="stage1Content" class="space-y-4">
-                    <!-- Content populated by JavaScript -->
+            <div class="analysis-section" id="analysisResults" style="display: none;">
+                <div class="stage">
+                    <h3>
+                        <div class="stage-icon">🔍</div>
+                        Stage 1: Image Analysis Results
+                    </h3>
+                    <p>🔍 AI is analysing your coil images...<br>
+                    Examining dust accumulation, biofilm formation, and fin condition</p>
                 </div>
-                <div id="stage1Loading" class="flex items-center text-blue-600 dark:text-blue-400">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <div>
-                        <div id="stage1LoadingText">🔍 AI is analyzing your coil images...</div>
-                        <div class="text-sm text-blue-500 dark:text-blue-300 mt-1">
-                            Examining dust accumulation, biofilm formation, and fin condition
-                        </div>
+
+                <div class="stage">
+                    <h3>
+                        <div class="stage-icon">🧮</div>
+                        Stage 2: Energy Impact Analysis
+                    </h3>
+                    <p>🧮 Calculating energy impact and costs...<br>
+                    Analysing thermal resistance, airflow restrictions, and efficiency penalties</p>
+                </div>
+
+                <div class="stage">
+                    <h3>
+                        <div class="stage-icon">📊</div>
+                        Summary & Recommendations
+                    </h3>
+                    <div class="error-section">
+                        <h3>Analysis Error</h3>
+                        <p>Unable to complete analysis. Please check your inputs and try again.</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- Stage 2: Energy Loss Calculation -->
-            <div id="stage2Results" class="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-semibold text-red-800 dark:text-red-200 mb-4">
-                    Stage 2: Energy Impact Analysis
-                </h3>
-                <div id="stage2Content" class="space-y-4">
-                    <!-- Content populated by JavaScript -->
-                </div>
-                <div id="stage2Loading" class="hidden flex items-center text-red-600 dark:text-red-400">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <div>
-                        <div id="stage2LoadingText">🧮 Calculating energy impact and costs...</div>
-                        <div class="text-sm text-red-500 dark:text-red-300 mt-1">
-                            Analyzing thermal resistance, airflow restrictions, and efficiency penalties
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Summary Card -->
-            <div id="summaryCard" class="hidden bg-green-50 dark:bg-green-900/20 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-green-800 dark:text-green-200 mb-4">
-                    Summary & Recommendations
-                </h3>
-                <div id="summaryContent">
-                    <!-- Content populated by JavaScript -->
                 </div>
             </div>
         </div>
 
-        <!-- Error Display -->
-        <div id="errorDisplay" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-            <div class="flex">
-                <svg class="w-5 h-5 text-red-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <div>
-                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Analysis Error</h3>
-                    <p id="errorMessage" class="text-sm text-red-700 dark:text-red-300 mt-1"></p>
-                </div>
+        <div class="footer">
+            <div>
+                Disclaimer: This HVAC Coil Energy Loss Analyser is for informational purposes only. Results are estimates and not a substitute for on‑site diagnostics.
+            </div>
+            <div class="copyright">
+                <div>© 2025 HiboCare. All rights reserved.</div>
+                <div>Powered by HiboCare AI Technology</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Security Configuration
-        const CONFIG = {
-            // 🔐 REPLACE THESE WITH YOUR VALUES
-            encryptedApiKey: "HQ8JBm0IYwcSNlM8ShwxQQwkY0dgfENUWjtALjxFAxECZQVzGCwZOzcXKQ==", // Your encrypted API key here
-            
-            // Your custom HVAC bot (new prompt bot)
-            hvacBot: "AC-Coil-Analyzer-Bot", // Your specialized HVAC prompt bot
-            
-            // Security settings
-            maxRequestsPerMinute: 10,
-            sessionTimeout: 30000, // 30 seconds between requests
-        };
-
-        // 🔐 Encryption/Decryption Functions
-        function simpleEncrypt(text, key = "hvac2024secure") {
-            let encrypted = "";
-            for (let i = 0; i < text.length; i++) {
-                encrypted += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        // File upload handling
+        document.getElementById('coilImages').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                const uploadArea = document.querySelector('.upload-area');
+                uploadArea.style.borderColor = '#1f3871';
+                uploadArea.querySelector('.upload-text').textContent = `${files.length} file(s) selected`;
             }
-            return btoa(encrypted);
-        }
+        });
 
-        function simpleDecrypt(encryptedText, key = "hvac2024secure") {
-            try {
-                const encrypted = atob(encryptedText);
-                let decrypted = "";
-                for (let i = 0; i < encrypted.length; i++) {
-                    decrypted += String.fromCharCode(encrypted.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-                }
-                return decrypted;
-            } catch (e) {
-                console.error('Decryption failed');
-                return null;
-            }
-        }
-
-        // 🛡️ Security Checks
-        let lastRequestTime = 0;
+        // Drag and drop functionality
+        const uploadArea = document.querySelector('.upload-area');
         
-        function validateRequest() {
-            // Rate limiting using in-memory storage
-            const now = Date.now();
-            
-            if (lastRequestTime && (now - lastRequestTime) < CONFIG.sessionTimeout) {
-                throw new Error('Please wait before making another request');
-            }
-            
-            lastRequestTime = now;
-            return true;
-        }
-
-        // 🔑 Get decrypted API key
-        function getApiKey(bypassRateLimit = false) {
-            try {
-                if (!bypassRateLimit) {
-                    validateRequest();
-                }
-                return simpleDecrypt(CONFIG.encryptedApiKey);
-            } catch (error) {
-                console.error('Security validation failed:', error.message);
-                throw new Error('Access denied');
-            }
-        }
-
-        // Dark mode setup
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-
-        // Global variables
-        let uploadedImages = [];
-        let stage1Results = null;
-
-        // DOM elements
-        const imageInput = document.getElementById('imageInput');
-        const dropZone = document.getElementById('dropZone');
-        const imagePreview = document.getElementById('imagePreview');
-        const cityInput = document.getElementById('cityInput');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const resultsSection = document.getElementById('resultsSection');
-        const errorDisplay = document.getElementById('errorDisplay');
-        const optionalToggle = document.getElementById('optionalToggle');
-        const optionalParams = document.getElementById('optionalParams');
-
-        // Set up event listeners
-        imageInput.addEventListener('change', handleImageUpload);
-        dropZone.addEventListener('click', () => imageInput.click());
-        dropZone.addEventListener('dragover', (e) => {
+        uploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
-            dropZone.classList.add('border-primary');
+            this.style.borderColor = '#1f3871';
+            this.style.background = 'linear-gradient(135deg, #fdf9f3, #fcf6ee)';
         });
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-primary');
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.background = 'linear-gradient(135deg, #fefcf8, #fdf9f3)';
         });
-        dropZone.addEventListener('drop', handleImageDrop);
-        analyzeBtn.addEventListener('click', startAnalysis);
-        optionalToggle.addEventListener('click', toggleOptionalParams);
 
-        function handleImageUpload(event) {
-            const files = Array.from(event.target.files);
-            processFiles(files);
-        }
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#1f3871';
+            const files = e.dataTransfer.files;
+            document.getElementById('coilImages').files = files;
+            this.querySelector('.upload-text').textContent = `${files.length} file(s) selected`;
+        });
 
-        function handleImageDrop(event) {
-            event.preventDefault();
-            dropZone.classList.remove('border-primary');
-            const files = Array.from(event.dataTransfer.files);
-            processFiles(files);
-        }
-
-        function processFiles(files) {
-            const imageFiles = files.filter(file => file.type.startsWith('image/'));
-            uploadedImages = imageFiles.slice(0, 3); // Limit to 3 images
-            displayImagePreviews();
-            updateAnalyzeButton();
-        }
-
-        function displayImagePreviews() {
-            imagePreview.innerHTML = '';
-            uploadedImages.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const div = document.createElement('div');
-                    div.className = 'relative group';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="Coil ${index + 1}" 
-                             class="w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600">
-                        <button onclick="removeImage(${index})" 
-                                class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            ×
-                        </button>
-                        <p class="text-xs text-gray-500 mt-1">${file.name}</p>
-                    `;
-                    imagePreview.appendChild(div);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function removeImage(index) {
-            uploadedImages.splice(index, 1);
-            displayImagePreviews();
-            updateAnalyzeButton();
-        }
-
-        function updateAnalyzeButton() {
-            const hasImages = uploadedImages.length > 0;
-            const hasCity = cityInput.value.trim().length > 0;
-            analyzeBtn.disabled = !hasImages || !hasCity;
-        }
-
-        function toggleOptionalParams() {
-            const isHidden = optionalParams.classList.contains('hidden');
-            optionalParams.classList.toggle('hidden');
-            const arrow = optionalToggle.querySelector('svg');
-            arrow.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
-        }
-
-        cityInput.addEventListener('input', updateAnalyzeButton);
-
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            errorDisplay.classList.remove('hidden');
-            resultsSection.classList.add('hidden');
-        }
-
-        function hideError() {
-            errorDisplay.classList.add('hidden');
-        }
-
-        // 🔐 Use Netlify Function as proxy to Poe API (solves CORS issues)
-        async function callOpenAIAPI(prompt, images = [], bypassRateLimit = false) {
-            try {
-                console.log('🤖 Using Netlify Function proxy for Poe API...');
-                console.log('🌐 Current URL:', window.location.href);
-                
-                if (!bypassRateLimit) {
-                    validateRequest();
-                }
-                
-                const apiKey = getApiKey(true);
-                console.log('🔑 API Key configured:', apiKey ? `Yes (${apiKey.substring(0, 10)}...)` : 'No');
-                
-                if (!apiKey) {
-                    throw new Error('Poe API key not configured');
-                }
-
-                // Convert images to base64 if any
-                const imageData = [];
-                for (const file of images) {
-                    const base64 = await fileToBase64(file);
-                    imageData.push({
-                        type: "image_url",
-                        image_url: {
-                            url: base64
-                        }
-                    });
-                }
-                console.log('📸 Images processed:', imageData.length);
-
-                // Prepare messages array
-                const messages = [
-                    {
-                        role: "system",
-                        content: `You are an expert HVAC engineer specializing in cooling coil analysis and energy efficiency. You have extensive experience with:
-- Fouling assessment and measurement
-- Biofilm formation in humid climates  
-- Dust accumulation patterns
-- Energy loss calculations for CHW and DX systems
-- ASHRAE standards and best practices
-- Regional climate impact on HVAC performance
-
-You have access to specialized tools for fouling analysis and energy calculations. Provide accurate, professional analysis.`
-                    },
-                    {
-                        role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: prompt
-                            },
-                            ...imageData
-                        ]
-                    }
-                ];
-
-                console.log('📤 Sending request via Netlify Function...');
-                console.log('🤖 Bot model:', 'AC-Coil-Analyzer-Bot');
-                
-                const requestBody = {
-                    apiKey: apiKey,
-                    model: "AC-Coil-Analyzer-Bot", // Using your custom HVAC bot
-                    messages: messages,
-                    max_tokens: 2000,
-                    temperature: 0.3
-                };
-
-                // Use Netlify Function as proxy (no CORS issues)
-                const response = await fetch('/.netlify/functions/poe-proxy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                console.log('📥 Response status:', response.status, response.statusText);
-                console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Netlify Function Error:', errorText);
-                    
-                    let errorObj;
-                    try {
-                        errorObj = JSON.parse(errorText);
-                    } catch {
-                        errorObj = { error: { message: errorText } };
-                    }
-                    
-                    throw new Error(`Netlify Function error (${response.status}): ${errorObj.error?.message || errorObj.message || response.statusText}`);
-                }
-
-                const data = await response.json();
-                console.log('✅ Netlify Function Response received:', data);
-                
-                if (data.error) {
-                    throw new Error(`Poe API error: ${data.error}`);
-                }
-                
-                const content = data.choices[0].message.content;
-                console.log('✅ Success with Netlify Function proxy');
-                return content;
-                
-            } catch (error) {
-                console.error('❌ Detailed API Error:', error);
-                console.error('❌ Error stack:', error.stack);
-                
-                // Provide more specific error messages
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    throw new Error(`Network connection failed. This could be due to:
-- Netlify Function not deployed or accessible
-- Invalid API key (check console for key details)
-- Bot "${CONFIG.hvacBot}" not accessible via API
-- Network connectivity issues`);
-                }
-                
-                throw new Error(`Failed to complete HVAC analysis: ${error.message}`);
-            }
-        }
-
-        // Helper function to convert file to base64
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function startAnalysis() {
-            try {
-                hideError();
-                resultsSection.classList.remove('hidden');
-                
-                // Reset stages
-                document.getElementById('stage1Loading').classList.remove('hidden');
-                document.getElementById('stage1Content').innerHTML = '';
-                document.getElementById('stage2Content').innerHTML = '';
-                document.getElementById('summaryCard').classList.add('hidden');
-                
-                analyzeBtn.disabled = true;
-                analyzeBtn.textContent = 'Analyzing...';
-
-                await runStage1Analysis();
-                
-            } catch (error) {
-                console.error('Analysis failed:', error);
-                handleAnalysisError(error);
-                resetAnalyzeButton();
-            }
-        }
-
-        function handleAnalysisError(error) {
-            const errorMsg = error.message.toLowerCase();
+        // Analysis function
+        function analyzeCoil() {
+            const button = document.querySelector('.btn-primary');
+            const spinner = document.getElementById('loadingSpinner');
+            const results = document.getElementById('analysisResults');
             
-            if (errorMsg.includes('failed to fetch') || errorMsg.includes('network error')) {
-                if (window.location.protocol === 'file:') {
-                    // Local file access
-                    showError(`🚫 Local File Limitation: This app requires server hosting to access external APIs.
-
-Solutions:
-1. Use this app in Poe Canvas (recommended)
-2. Host on a web server (Apache, Nginx, or Python http.server)
-3. Use a local development server (Live Server extension in VS Code)
-
-The browser blocks API calls from file:// URLs for security reasons.`);
-                } else if (isWixEnvironment()) {
-                    // Wix widget environment
-                    showError(`🚫 Wix Widget Limitation: Wix blocks external API calls from widgets for security.
-
-Solutions:
-1. Deploy as standalone webpage (not widget) on:
-   • Netlify (netlify.com) - Free
-   • Vercel (vercel.com) - Free  
-   • GitHub Pages - Free
-   • Any web hosting service
-
-2. Use in Poe Canvas instead:
-   • Go to Poe.com → Create Canvas App
-   • Paste this HTML code directly
-
-Wix widgets cannot access external APIs like api.poe.com`);
-                } else {
-                    // Other CORS/CSP issues
-                    showError(`🔒 Network Access Blocked: External API access was blocked by browser security policies.
-
-In Poe Canvas:
-• Click "Allow all access" when prompted to enable API calls
-• This is normal for external API access
-
-For web hosting:
-• Deploy on Netlify, Vercel, or GitHub Pages for unrestricted API access
-• Avoid platforms with strict widget CSP policies`);
-                }
-            } else if (errorMsg.includes('api key not configured') || errorMsg.includes('authentication')) {
-                showError(`🔑 API Key Issue: Please configure your Poe API key.
-
-Steps:
-1. Get your API key from: https://poe.com/api_key
-2. Encrypt it using the console: simpleEncrypt("your-key-here")
-3. Replace the encryptedApiKey value in the CONFIG object`);
-            } else {
-                showError('Analysis failed: ' + error.message);
-            }
-        }
-
-        function isWixEnvironment() {
-            // Detect if running in Wix widget/embedded environment
-            return window.location.hostname.includes('wix') || 
-                   window.location.hostname.includes('wixsite') ||
-                   window.parent !== window || // Iframe detection
-                   (window.location.href.includes('wix') && window.top !== window);
-        }
-
-        async function runStage1Analysis() {
-            const city = cityInput.value.trim();
-            const coilType = document.getElementById('coilType').value;
-            const filterMerv = document.getElementById('filterMerv').value;
+            // Show loading state
+            spinner.classList.remove('hidden');
+            button.disabled = true;
+            button.textContent = '';
+            button.appendChild(spinner);
+            button.appendChild(document.createTextNode('Analysing...'));
             
-            // Start loading text animation
-            startStage1LoadingAnimation();
-            
-            // Prepare optional parameters
-            let optionalParams = '';
-            if (coilType) optionalParams += `, HVAC Type: ${coilType}`;
-            if (filterMerv) optionalParams += `, Filter MERV: ${filterMerv}`;
-
-            // Single comprehensive prompt for both fouling analysis AND energy impact
-            const prompt = `Analyze this HVAC cooling coil for both fouling condition AND energy impact.
-
-LOCATION: ${city}${optionalParams}
-
-IMPORTANT: Respond with ONLY a JSON object in this exact format (no markdown, no explanations, no additional text):
-
-{
-  "fouling_analysis": {
-    "dust_mm": 0.0,
-    "biofilm_mm": 0.0,
-    "total_fouling_mm": 0.0,
-    "observations": "Detailed technical observations about coil condition",
-    "confidence": "High/Medium/Low"
-  },
-  "energy_impact": {
-    "chw_loss_percent": 0.0,
-    "dx_loss_percent": 0.0,
-    "climate_factor": "Climate adjustment explanation",
-    "annual_cost_impact": "Cost estimate description",
-    "urgency": "Low/Medium/High"
-  },
-  "summary": {
-    "condition": "Clean/Light/Moderate/Heavy fouling",
-    "priority": "Monitor/Schedule/Immediate",
-    "next_inspection": "Timeframe recommendation"
-  }
-}
-
-Use your uploaded documents to provide accurate fouling measurements and energy calculations. If images are provided, analyze them carefully. If no images, provide estimates based on typical conditions for ${city} climate.`;
-
-            try {
-                console.log('🔍 Requesting comprehensive analysis from your bot...');
-                const response = await callOpenAIAPI(prompt, uploadedImages);
-                
-                // Parse JSON response
-                const analysisData = parseJSONResponse(response);
-                
-                // Display results in both sections
-                displayResults(analysisData);
-                
-                document.getElementById('stage1Loading').classList.add('hidden');
-                if (stage1LoadingInterval) clearInterval(stage1LoadingInterval);
-                
-                resetAnalyzeButton();
-                
-            } catch (error) {
-                throw new Error('Failed to complete comprehensive analysis: ' + error.message);
-            }
-        }
-
-
-
-        // Parse JSON response from bot
-        function parseJSONResponse(response) {
-            console.log('Raw bot response:', response);
-            
-            try {
-                // Remove markdown code blocks if present
-                let cleanResponse = response.replace(/```json\s*/gi, '').replace(/```\s*/gi, '');
-                cleanResponse = cleanResponse.trim();
-                
-                // Find JSON object boundaries
-                const jsonStart = cleanResponse.indexOf('{');
-                const jsonEnd = cleanResponse.lastIndexOf('}') + 1;
-                
-                if (jsonStart !== -1 && jsonEnd > jsonStart) {
-                    const jsonString = cleanResponse.substring(jsonStart, jsonEnd);
-                    console.log('Extracted JSON string:', jsonString);
-                    
-                    const data = JSON.parse(jsonString);
-                    console.log('✅ Successfully parsed JSON:', data);
-                    
-                    // Validate that we have the expected structure
-                    if (data.fouling_analysis && data.energy_impact && data.summary) {
-                        return data;
-                    } else {
-                        console.warn('JSON structure incomplete, using fallback');
-                        return parseResponseManually(response);
-                    }
-                } else {
-                    console.warn('No JSON found in response, using fallback');
-                    return parseResponseManually(response);
-                }
-                
-            } catch (error) {
-                console.error('JSON parsing failed:', error);
-                console.log('Response that failed to parse:', response);
-                console.log('Attempting fallback parsing...');
-                
-                // Fallback: parse manually if JSON parsing fails
-                return parseResponseManually(response);
-            }
-        }
-
-        // Fallback manual parsing with more comprehensive text extraction
-        function parseResponseManually(response) {
-            console.log('🔧 Using manual parsing fallback');
-            
-            // Extract basic values using more flexible regex patterns
-            const dustMatch = response.match(/(?:dust|fine particles)[^0-9]*([0-9.]+)\s*mm/i);
-            const biofilmMatch = response.match(/(?:biofilm|organic)[^0-9]*([0-9.]+)\s*mm/i);
-            const chwMatch = response.match(/(?:chw|chilled water)[^0-9]*([0-9.]+)\s*%/i);
-            const dxMatch = response.match(/(?:dx|direct expansion)[^0-9]*([0-9.]+)\s*%/i);
-            
-            // Extract descriptive text sections
-            const observationsMatch = response.match(/(?:observations?|condition|analysis)[^.]*[:.]\s*([^.]+(?:\.[^.]*){0,3})/i);
-            const climateMatch = response.match(/(?:climate|weather|environmental)[^.]*[:.]\s*([^.]+(?:\.[^.]*){0,2})/i);
-            const costMatch = response.match(/(?:cost|financial|economic)[^.]*[:.]\s*([^.]+(?:\.[^.]*){0,2})/i);
-            
-            const dustVal = dustMatch ? parseFloat(dustMatch[1]) : 0.8;
-            const biofilmVal = biofilmMatch ? parseFloat(biofilmMatch[1]) : 0.4;
-            
-            return {
-                fouling_analysis: {
-                    dust_mm: dustVal,
-                    biofilm_mm: biofilmVal,
-                    total_fouling_mm: dustVal + biofilmVal,
-                    observations: observationsMatch ? observationsMatch[1].trim() : "Detailed technical analysis of coil condition based on visual inspection and measurements",
-                    confidence: "Medium"
-                },
-                energy_impact: {
-                    chw_loss_percent: chwMatch ? parseFloat(chwMatch[1]) : 4.8,
-                    dx_loss_percent: dxMatch ? parseFloat(dxMatch[1]) : 7.2,
-                    climate_factor: climateMatch ? climateMatch[1].trim() : "Climate factors considered for this geographic location",
-                    annual_cost_impact: costMatch ? costMatch[1].trim() : "Estimated annual cost impact from reduced efficiency",
-                    urgency: "Medium"
-                },
-                summary: {
-                    condition: dustVal + biofilmVal > 2.0 ? "Heavy fouling" : dustVal + biofilmVal > 1.0 ? "Moderate fouling" : "Light fouling",
-                    priority: dustVal + biofilmVal > 2.0 ? "Immediate" : dustVal + biofilmVal > 1.0 ? "Schedule" : "Monitor",
-                    next_inspection: dustVal + biofilmVal > 2.0 ? "1-2 months" : dustVal + biofilmVal > 1.0 ? "3-6 months" : "6-12 months"
-                }
-            };
-        }
-
-        // Display results in UI
-        function displayResults(data) {
-            const fouling = data.fouling_analysis;
-            const energy = data.energy_impact;
-            const summary = data.summary;
-            
-            // Stage 1: Fouling Analysis
-            document.getElementById('stage1Content').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">Dust Layer</h4>
-                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">${parseFloat(fouling.dust_mm).toFixed(1)} mm</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">Biofilm Layer</h4>
-                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">${parseFloat(fouling.biofilm_mm).toFixed(1)} mm</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">Total Fouling</h4>
-                        <p class="text-2xl font-bold text-red-600 dark:text-red-400">${parseFloat(fouling.total_fouling_mm).toFixed(1)} mm</p>
-                    </div>
-                </div>
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                    <h4 class="font-semibold mb-2">Technical Observations</h4>
-                    <p class="text-sm text-blue-800 dark:text-blue-200">${fouling.observations}</p>
-                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">Confidence: ${fouling.confidence}</p>
-                </div>
-            `;
-
-            // Stage 2: Energy Impact
-            document.getElementById('stage2Content').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">CHW System Loss</h4>
-                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${energy.chw_loss_percent}%</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Chilled Water Systems</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">DX System Loss</h4>
-                        <p class="text-2xl font-bold text-red-600 dark:text-red-400">${energy.dx_loss_percent}%</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Direct Expansion Systems</p>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-                        <h4 class="font-semibold mb-2">Climate Factors</h4>
-                        <p class="text-sm text-yellow-800 dark:text-yellow-200">${energy.climate_factor}</p>
-                    </div>
-                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                        <h4 class="font-semibold mb-2">Cost Impact</h4>
-                        <p class="text-sm text-green-800 dark:text-green-200">${energy.annual_cost_impact}</p>
-                    </div>
-                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-                        <h4 class="font-semibold mb-2">Preventive Solution</h4>
-                        <p class="text-sm text-purple-800 dark:text-purple-200">
-                            Consider installing <strong><a href="https://hibocare.com" target="_blank" class="underline hover:text-purple-600">HiboScreen</a></strong> for F9 grade filtration with minimal pressure drop. 
-                            HiboScreen prevents coil fouling by eliminating 99.92% of viruses, 99.57% of bacteria, and 90.5% of mould.
-                        </p>
-                    </div>
-                </div>
-            `;
-
-            // Summary
-            const urgencyColors = {
-                'Low': 'green',
-                'Medium': 'yellow', 
-                'High': 'red'
-            };
-            const urgencyColor = urgencyColors[energy.urgency] || 'gray';
-            
-            document.getElementById('summaryContent').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">Condition</h4>
-                        <p class="text-lg font-medium text-blue-600 dark:text-blue-400">${summary.condition}</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">Priority</h4>
-                        <p class="text-lg font-medium text-${urgencyColor}-600 dark:text-${urgencyColor}-400">${summary.priority}</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <h4 class="font-semibold text-lg mb-2">Next Inspection</h4>
-                        <p class="text-lg font-medium text-gray-600 dark:text-gray-400">${summary.next_inspection}</p>
-                    </div>
-                </div>
-                <div class="bg-${urgencyColor}-50 dark:bg-${urgencyColor}-900/20 border border-${urgencyColor}-200 dark:border-${urgencyColor}-800 rounded-lg p-4">
-                    <p class="text-${urgencyColor}-800 dark:text-${urgencyColor}-200 font-medium">
-                        ${getUrgencyMessage(energy.urgency, fouling.total_fouling_mm)}
-                    </p>
-                </div>
-            `;
-
-            document.getElementById('summaryCard').classList.remove('hidden');
-        }
-
-        function getUrgencyMessage(urgency, totalFouling) {
-            switch(urgency) {
-                case 'High':
-                    return `🚨 <strong>Immediate attention required</strong> - ${totalFouling}mm fouling is causing significant energy waste`;
-                case 'Medium':
-                    return `⚠️ <strong>Schedule cleaning soon</strong> - ${totalFouling}mm fouling is impacting efficiency`;
-                case 'Low':
-                default:
-                    return `✅ <strong>Monitor condition</strong> - ${totalFouling}mm fouling levels are acceptable`;
-            }
-        }
-
-        function resetAnalyzeButton() {
-            analyzeBtn.disabled = false;
-            analyzeBtn.textContent = 'Analyze Coil Condition';
-            updateAnalyzeButton();
-        }
-
-        // Loading animations
-        let stage1LoadingInterval;
-        let stage2LoadingInterval;
-
-        function startStage1LoadingAnimation() {
-            const messages = [
-                "🔍 AI is analyzing your coil images...",
-                "📊 Processing image data and extracting features...",
-                "🔬 Detecting dust particles and biofilm formation...",
-                "📏 Measuring fouling thickness across coil surfaces...",
-                "🧠 AI is examining fin spacing and blockage levels...",
-                "⚡ Almost done with image analysis..."
-            ];
-            
-            let index = 0;
-            const textElement = document.getElementById('stage1LoadingText');
-            
-            stage1LoadingInterval = setInterval(() => {
-                textElement.textContent = messages[index % messages.length];
-                index++;
+            // Simulate analysis process
+            setTimeout(() => {
+                spinner.classList.add('hidden');
+                button.disabled = false;
+                button.innerHTML = 'Analyse Coil Condition';
+                results.style.display = 'block';
+                results.scrollIntoView({ behavior: 'smooth' });
             }, 3000);
         }
 
-        function startStage2LoadingAnimation() {
-            const messages = [
-                "🧮 Calculating energy impact and costs...",
-                "🌡️ Computing thermal resistance increases...",
-                "💨 Analyzing airflow restriction penalties...",
-                "⚡ Estimating fan energy consumption changes...",
-                "🏢 Applying climate factors for your location...",
-                "💰 Finalizing cost impact calculations..."
-            ];
-            
-            let index = 0;
-            const textElement = document.getElementById('stage2LoadingText');
-            
-            stage2LoadingInterval = setInterval(() => {
-                textElement.textContent = messages[index % messages.length];
-                index++;
-            }, 2500);
-        }
-
-        function stopLoadingAnimations() {
-            if (stage1LoadingInterval) {
-                clearInterval(stage1LoadingInterval);
-                stage1LoadingInterval = null;
-            }
-            if (stage2LoadingInterval) {
-                clearInterval(stage2LoadingInterval);
-                stage2LoadingInterval = null;
-            }
-        }
-
-        // Initialize app on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('HVAC Analyzer initialized securely');
+        // Form validation
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.style.borderColor = '#e1e5e9';
+                } else {
+                    this.style.borderColor = '#28a745';
+                }
+            });
         });
     </script>
 </body>
