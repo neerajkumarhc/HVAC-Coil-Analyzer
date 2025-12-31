@@ -1,0 +1,12 @@
+{
+  "name": "your-project-name",
+  "compatibility_date": "2025-12-31",
+
+  // Worker entrypoint (your proxy)
+  "main": "functions/poe-proxy.js",
+
+  // Serve static files (your index.html, etc.) from repo root
+  "assets": {
+    "directory": "."
+  }
+}
